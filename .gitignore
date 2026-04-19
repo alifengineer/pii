@@ -1,0 +1,5 @@
+.claude
+docs
+pii
+coverage.out
+data/

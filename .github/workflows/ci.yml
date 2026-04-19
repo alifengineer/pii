@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  pull-requests: write
+  contents: write
+  pages: write
+
+concurrency:
+  group: ${{ github.actor }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      coverage: ${{ steps.coverage-values.outputs.total }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: 'stable'
+          check-latest: true
+          cache-dependency-path: |
+            ./go.sum
+
+      - name: Install dependencies
+        run: |
+          go mod tidy
+          go install github.com/t-yuki/gocover-cobertura@latest
+
+      - name: Run tests with coverage
+        run: |
+          go test $(go list ./... | grep -v '/testing/') -coverprofile=coverage.out.mocks -covermode=atomic
+          grep -v 'mock' coverage.out.mocks > coverage.out # remove mocks from coverage report
+
+      - name: Get coverage values
+        id: coverage-values
+        run: |
+          total=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+          echo "Total coverage: $total%"
+          echo "total=$total" >> $GITHUB_OUTPUT
+
+      - name: Convert coverage to Cobertura format (for PR comments)
+        if: github.event_name == 'pull_request'
+        run: |
+          $(which gocover-cobertura) < coverage.out > coverage.xml
+
+      - name: Coverage summary for PR
+        if: github.event_name == 'pull_request'
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+          badge: true
+          fail_below_min: false
+          format: markdown
+          indicators: true
+          output: both
+
+      - name: Add coverage report to pull request
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          recreate: true
+          path: code-coverage-results.md
+
+      - name: Upload coverage artifact
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-data
+          path: coverage.out
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "stable"
+          check-latest: true
+          cache-dependency-path: |
+            ./go.sum
+
+      - name: Install golangci-lint
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
+
+      - name: Update dependencies and tidy up
+        run: |
+          go mod tidy
+
+      - name: Run golangci-lint
+        run: |
+          golangci-lint run ./... --timeout 10m
+
+  update-badge:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create or checkout gh-pages
+        shell: bash
+        run: |
+          if git show-ref --verify --quiet refs/heads/gh-pages; then
+            git checkout gh-pages
+          else
+            git checkout --orphan gh-pages
+            git rm -rf .
+            echo "# GitHub Pages" > README.md
+            git add README.md
+            git commit -m "Initial gh-pages commit"
+          fi
+
+      - name: Update coverage badge
+        shell: bash
+        run: |
+          npm i -g badgen-cli
+          export COV=${{ needs.unit-tests.outputs.coverage }}
+          COLOR=$(node -p '+process.env.COV >= 70 ? `green` : `orange`')
+          mkdir -p badges
+          badgen -j coverage -s $COV% -c $COLOR > badges/coverage.svg
+          git add badges/coverage.svg
+          git commit -m "Update coverage badge" || echo "No changes to commit"
+
+      - name: Force push to gh-pages
+        shell: bash
+        run: |
+          git push origin gh-pages --force

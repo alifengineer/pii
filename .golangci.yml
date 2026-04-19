@@ -1,0 +1,67 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - unused
+    - ineffassign
+    - asasalint
+    - bodyclose
+    - dupl
+    - durationcheck
+    - errname
+    - exptostd
+    - gosec
+    - importas
+    - iface
+    - intrange
+    - lll
+    - musttag
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - perfsprint
+    - prealloc
+    - reassign
+    - recvcheck
+    - rowserrcheck
+    - sqlclosecheck
+    - thelper
+    - usestdlibvars
+    - wrapcheck
+    - gocritic
+  settings:
+    errcheck:
+      check-type-assertions: true
+    gocritic:
+      disabled-checks:
+        - whyNoLint
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+  exclusions:
+    paths:
+      - pkg
+run:
+  timeout: 10m
+  allow-parallel-runners: true
+  go: "1.24"
+  tests: true
+severity:
+  default: error
+  rules:
+    - severity: warning
+      linters:
+        - dupl
+output:
+  formats:
+    text:
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+      path: stderr
+  show-stats: true
