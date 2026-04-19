@@ -16,3 +16,29 @@
 //
 // Then run: //go:generate pii
 package sanitize
+
+import "github.com/alifengineer/pii"
+
+type Email string
+
+func (e Email) Sanitize() Email {
+	return pii.MaskEmail(e)
+}
+
+type Name string
+
+func (n Name) Sanitize() Name {
+	return pii.MaskName(n)
+}
+
+type PAN string
+
+func (p PAN) Sanitize() PAN {
+	return pii.MaskPAN(p)
+}
+
+type Phone string
+
+func (p Phone) Sanitize() Phone {
+	return pii.MaskPhone(p)
+}

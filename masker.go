@@ -1,4 +1,4 @@
-package mask
+package pii
 
 import (
 	"strings"
@@ -7,51 +7,83 @@ import (
 
 // MaskName keeps the first rune, stars the rest. "Jonathan" -> "J*******".
 func MaskName[T ~string](v T) T {
-	n := utf8.RuneCountInString(string(v))
-	switch n {
-	case 0:
-		return T("")
-	case 1:
-		return T("*")
+	s := string(v)
+	words := strings.Fields(s)
+	if len(words) == 0 {
+		return ""
 	}
 
-	r, _ := utf8.DecodeRuneInString(string(v))
-	return T(string(r) + strings.Repeat("*", n-1))
+	masked := make([]string, len(words))
+	for i, w := range words {
+		first, size := utf8.DecodeRuneInString(w)
+		if size == 0 {
+			masked[i] = w
+			continue
+		}
+		remaining := utf8.RuneCountInString(w) - 1
+		masked[i] = string(first) + strings.Repeat("*", remaining)
+	}
+
+	return T(strings.Join(masked, " "))
 }
 
 // MaskPhone keeps the last 4 digits of the numeric portion.
 // "+998 (90) 123-45-67" -> "********4567".
 func MaskPhone[T ~string](v T) T {
 	if v == "" {
-		return T("")
-	}
-	if len(v) <= 4 {
-		return T(strings.Repeat("*", len(v)))
+		return ""
 	}
 
-	return T(strings.Repeat("*", len(v)-4) + string(v)[len(v)-4:])
+	if len(v) <= 4 {
+		return "****"
+	}
+
+	return T("***" + string(v[len(v)-4:]))
 }
 
 // MaskEmail keeps the first char of the local part and the full domain.
 // "john.doe@acme.com" -> "j*******@acme.com".
 func MaskEmail[T ~string](v T) T {
-	at := strings.LastIndex(string(v), "@")
-	if at <= 0 {
-		return T(strings.Repeat("*", utf8.RuneCountInString(string(v))))
+	s := string(v)
+	if s == "" {
+		return ""
 	}
 
-	local, domain := string(v)[:at], string(v)[at:]
-	n := utf8.RuneCountInString(local)
-	if n <= 1 {
-		return T(local + domain)
+	before, after, ok := strings.Cut(s, "@")
+	if !ok {
+		return "****"
 	}
 
-	r, _ := utf8.DecodeRuneInString(local)
-	return T(string(r) + strings.Repeat("*", n-1) + domain)
+	local := before
+	domain := after
+	maskedLocal := maskFirstLetter(local)
+	dot := strings.LastIndexByte(domain, '.')
+	if dot < 0 {
+		return T(maskedLocal + "@" + maskFirstLetter(domain))
+	}
+
+	domainPrefix := domain[:dot]
+	tld := domain[dot+1:]
+	return T(maskedLocal + "@" + maskFirstLetter(domainPrefix) + "." + tld)
+}
+
+func maskFirstLetter(s string) string {
+	if s == "" {
+		return "***"
+	}
+	return string(s[0]) + "***"
 }
 
 // MaskPAN keeps the first 6 (BIN) and last 4 digits — PCI-DSS safe.
 // "4111 1111 1111 1111" -> "411111******1111".
 func MaskPAN[T ~string](v T) T {
-	return T(string(v)[:6] + strings.Repeat("*", len(v)-10) + string(v)[len(v)-4:])
+	s := string(v)
+	if s == "" {
+		return ""
+	}
+	if len(s) <= 10 {
+		return "****"
+	}
+
+	return T(s[:6] + strings.Repeat("*", len(s)-10) + s[len(s)-4:])
 }

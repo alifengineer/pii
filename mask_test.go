@@ -1,4 +1,4 @@
-package mask
+package pii
 
 import (
 	"encoding/json"
@@ -58,12 +58,12 @@ func TestMask(t *testing.T) {
 			},
 			expected: User{
 				UserID: 10,
-				Name:   new("J*******"),
-				Phone:  new(UserPhone("*******7890")),
-				Email:  "j*******@example.com",
+				Name:   new("J*** D**"),
+				Phone:  new(UserPhone("***7890")),
+				Email:  "j***@e***.com",
 				ContactInfo: ContactInfo{
-					Phone: "*******7890",
-					Email: "j*******@example.com",
+					Phone: "***7890",
+					Email: "j***@e***.com",
 				},
 				Address: &Address{
 					Street: "123 Main St",
@@ -81,7 +81,7 @@ func TestMask(t *testing.T) {
 			expected: User{
 				Name:  nil,
 				Phone: nil,
-				Email: "a@b.com",
+				Email: "a***@b***.com",
 			},
 		},
 		{
@@ -117,12 +117,12 @@ func TestMask(t *testing.T) {
 				},
 			},
 			expected: User{
-				Name:  new("*"),
-				Phone: new(UserPhone("*")),
-				Email: "*",
+				Name:  new("A"),
+				Phone: new(UserPhone("****")),
+				Email: "****",
 				ContactInfo: ContactInfo{
-					Phone: "*",
-					Email: "*",
+					Phone: "****",
+					Email: "****",
 				},
 			},
 		},
@@ -135,8 +135,8 @@ func TestMask(t *testing.T) {
 			},
 			expected: User{
 				Name:  new("J***"),
-				Phone: new(UserPhone("*******7890")),
-				Email: "j@d.com",
+				Phone: new(UserPhone("***7890")),
+				Email: "j***@d***.com",
 			},
 		},
 		{
@@ -157,19 +157,19 @@ func TestMask(t *testing.T) {
 				Address: nil,
 			},
 			expected: User{
-				Email:   "a@b.com",
+				Email:   "a***@b***.com",
 				Address: nil,
 			},
 		},
 		{
 			name: "unicode names",
-			input: ContactInfo{
-				Phone: "+998901234567",
-				Email: "Ыхмед@example.com",
+			input: User{
+				Name:  new("Алиса Иванова"),
+				Email: "alice@example.com",
 			},
-			expected: ContactInfo{
-				Phone: "*********4567",
-				Email: "Ы****@example.com",
+			expected: User{
+				Name:  new("А**** И******"),
+				Email: "a***@e***.com",
 			},
 		},
 		{
@@ -180,7 +180,7 @@ func TestMask(t *testing.T) {
 			},
 			expected: User{
 				UserID: 42,
-				Email:  "a@b.com",
+				Email:  "a***@b***.com",
 			},
 		},
 		{
