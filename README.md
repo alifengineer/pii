@@ -1,5 +1,4 @@
 [![CI](https://github.com/alifengineer/pii/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alifengineer/pii/actions/workflows/ci.yml)
-[![cov](https://alifengineer.github.io/pii/badges/coverage.svg)](https://github.com/alifengineer/pii/actions)
 
 # Pii
 
