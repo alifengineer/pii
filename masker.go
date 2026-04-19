@@ -85,6 +85,5 @@ func MaskPAN[T ~string](v T) T {
 		return "****"
 	}
 
-	middle := len(s) - 10
-	return T(s[:6] + strings.Repeat("*", middle) + s[len(s)-4:])
+	return T(s[:6] + strings.Repeat("*", len(s)-10) + s[len(s)-4:])
 }
