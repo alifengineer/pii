@@ -4,7 +4,6 @@
 # pii — PII Masking & Data Sanitization Library for Go
 
 Mask sensitive fields in Go structs at runtime or compile time. Supports names, emails, phones, and PANs with custom masker registration. 
-This covers the long-tail queries: "mask struct fields golang", "pii redaction go library", "sanitize personal data go".
 
 ---
 
