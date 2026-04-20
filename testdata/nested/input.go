@@ -25,7 +25,7 @@ type ContactInfo struct {
 	Email Email
 }
 
-//go:generate go run github.com/alifengineer/pii -type=User
+//go:generate sanitizer -type=User
 type User struct {
 	Name        string
 	ContactInfo ContactInfo

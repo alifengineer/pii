@@ -16,6 +16,7 @@ type User struct {
 	Address     *Address          `json:"address"`
 	UserID      int               `json:"user_id" pii:"ID"`
 	ExtraInfo   map[string]string `json:"extra_info" pii:"email"`
+	User        *User             `json:"user"`
 }
 
 type Address struct {
