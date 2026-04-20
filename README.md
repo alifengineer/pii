@@ -1,7 +1,10 @@
 [![CI](https://github.com/alifengineer/pii/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/alifengineer/pii/actions/workflows/ci.yml)
 [![cov](https://alifengineer.github.io/pii/badges/coverage.svg)](https://github.com/alifengineer/pii/actions)
 
-# Pii
+# pii — PII Masking & Data Sanitization Library for Go
+
+Mask sensitive fields in Go structs at runtime or compile time. Supports names, emails, phones, and PANs with custom masker registration. 
+This covers the long-tail queries: "mask struct fields golang", "pii redaction go library", "sanitize personal data go".
 
 Pii generates `Sanitize()` methods for Go structs. Any field with a `Sanitize()` method gets sanitized automatically; everything else is copied as-is. The result is a clean, non-mutating sanitizer you can call before logging or serializing sensitive data.
 
